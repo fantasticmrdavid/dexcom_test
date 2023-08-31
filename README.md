@@ -1,2 +1,2 @@
-# dexcom_test
-Toy app to test connecting to Dexcom
+# pydexcom-server
+Python app that connects to Dexcom and dumps readings into JSON webserver.
