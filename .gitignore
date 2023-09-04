@@ -1,4 +1,4 @@
 .env
+.envrc
 .idea
-output.json
 readings.json
