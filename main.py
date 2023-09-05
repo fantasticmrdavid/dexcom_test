@@ -38,4 +38,4 @@ while True:
         json.dump(writeOutput, outfile)
     print(display)
     bucket.upload_file('readings.json', 'readings.json', ExtraArgs={'ACL':'public-read'})
-    time.sleep(300)
+    time.sleep(150)
