@@ -21,13 +21,14 @@ session = boto3.Session(
 
 s3 = session.resource("s3")
 bucket = s3.Bucket(s3bucket)
+readingsArray = []
 
 while True:
     glucose_reading = dexcom.get_current_glucose_reading()
     if glucose_reading is not None :
         display = f'{glucose_reading.mmol_l} {glucose_reading.trend_arrow}'
         now = datetime.now()
-        writeOutput = {
+        currentReading = {
             "reading": {
                 "mmol_l": glucose_reading.mmol_l,
                 "trend_arrow": glucose_reading.trend_arrow,
@@ -36,6 +37,14 @@ while True:
                 "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
             }
         }
+        readingsArray = [currentReading["reading"]] + readingsArray
+        if len(readingsArray) > 12 :
+            readingsArray = readingsArray[:12]
+
+        writeOutput = {
+            "readings": readingsArray
+        }
+
         with open('readings.json', 'w') as outfile:
             json.dump(writeOutput, outfile)
         print(display)
