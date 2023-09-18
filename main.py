@@ -24,19 +24,20 @@ bucket = s3.Bucket(s3bucket)
 
 while True:
     glucose_reading = dexcom.get_current_glucose_reading()
-    display = f'{glucose_reading.mmol_l} {glucose_reading.trend_arrow}'
-    now = datetime.now()
-    writeOutput = {
-        "reading": {
-            "mmol_l": glucose_reading.mmol_l,
-            "trend_arrow": glucose_reading.trend_arrow,
-            "trend_description": glucose_reading.trend_description,
-            "last_cgm_reading": glucose_reading.datetime.isoformat(),
-            "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
+    if glucose_reading is not None :
+        display = f'{glucose_reading.mmol_l} {glucose_reading.trend_arrow}'
+        now = datetime.now()
+        writeOutput = {
+            "reading": {
+                "mmol_l": glucose_reading.mmol_l,
+                "trend_arrow": glucose_reading.trend_arrow,
+                "trend_description": glucose_reading.trend_description,
+                "last_cgm_reading": glucose_reading.datetime.isoformat(),
+                "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
+            }
         }
-    }
-    with open('readings.json', 'w') as outfile:
-        json.dump(writeOutput, outfile)
-    print(display)
-    bucket.upload_file('readings.json', 'readings.json', ExtraArgs={'ACL':'public-read'})
+        with open('readings.json', 'w') as outfile:
+            json.dump(writeOutput, outfile)
+        print(display)
+        bucket.upload_file('readings.json', 'readings.json', ExtraArgs={'ACL':'public-read'})
     time.sleep(60)
