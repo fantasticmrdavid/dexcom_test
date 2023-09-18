@@ -31,7 +31,8 @@ while True:
             "mmol_l": glucose_reading.mmol_l,
             "trend_arrow": glucose_reading.trend_arrow,
             "trend_description": glucose_reading.trend_description,
-            "datetime": now.strftime("%Y-%m-%d %H:%M:%S"),
+            "last_cgm_reading": glucose_reading.datetime.isoformat(),
+            "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
         }
     }
     with open('readings.json', 'w') as outfile:
