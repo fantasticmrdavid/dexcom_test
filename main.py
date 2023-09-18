@@ -37,7 +37,12 @@ while True:
                 "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
             }
         }
-        readingsArray = [currentReading["reading"]] + readingsArray
+        if len(readingsArray) > 0 :
+            first = readingsArray[0]
+            if glucose_reading.datetime.isoformat() != first["last_cgm_reading"] :
+                readingsArray = [currentReading["reading"]] + readingsArray
+        elif len(readingsArray) == 0 :
+            readingsArray = [currentReading["reading"]]
         if len(readingsArray) > 12 :
             readingsArray = readingsArray[:12]
 
