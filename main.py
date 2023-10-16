@@ -3,7 +3,7 @@ import boto3
 import json
 import time
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pydexcom import Dexcom
 
 username = os.environ["DEXCOM_USERNAME"]
@@ -28,12 +28,19 @@ while True:
     if glucose_reading is not None :
         display = f'{glucose_reading.mmol_l} {glucose_reading.trend_arrow}'
         now = datetime.now()
+
+        # Create a timezone object for the local timezone
+        local_timezone = timezone(datetime.now().astimezone().utcoffset())
+
+        # Get the timezone offset and format it as a string
+        timezone_offset = glucose_reading.datetime.strftime('%z')
+
         currentReading = {
             "reading": {
                 "mmol_l": glucose_reading.mmol_l,
                 "trend_arrow": glucose_reading.trend_arrow,
                 "trend_description": glucose_reading.trend_description,
-                "last_cgm_reading": glucose_reading.datetime.isoformat(),
+                "last_cgm_reading": glucose_reading.datetime.astimezone(timezone.utc).isoformat(),
                 "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
             }
         }
