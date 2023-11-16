@@ -3,7 +3,7 @@ import boto3
 import json
 import time
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pydexcom import Dexcom
 
 username = os.environ["DEXCOM_USERNAME"]
@@ -23,13 +23,13 @@ s3 = session.resource("s3")
 bucket = s3.Bucket(s3bucket)
 readingsArray = []
 
-last_reboot_time = datetime.now()  # Initialize the last reboot time
+last_reboot_time = datetime.now(timezone.utc)  # Initialize the last reboot time
 
 while True:
     glucose_reading = dexcom.get_current_glucose_reading()
     if glucose_reading is not None :
         display = f'{glucose_reading.mmol_l} {glucose_reading.trend_arrow}'
-        now = datetime.now()
+        now = datetime.now(timezone.utc)  # Make now offset-aware
 
         # Create a timezone object for the local timezone
         local_timezone = timezone(datetime.now().astimezone().utcoffset())
@@ -37,12 +37,14 @@ while True:
         # Get the timezone offset and format it as a string
         timezone_offset = glucose_reading.datetime.strftime('%z')
 
+        last_cgm_reading = glucose_reading.datetime.astimezone(timezone.utc)
+
         currentReading = {
             "reading": {
                 "mmol_l": glucose_reading.mmol_l,
                 "trend_arrow": glucose_reading.trend_arrow,
                 "trend_description": glucose_reading.trend_description,
-                "last_cgm_reading": glucose_reading.datetime.astimezone(timezone.utc).isoformat(),
+                "last_cgm_reading": last_cgm_reading.isoformat(),
                 "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
             }
         }
@@ -64,7 +66,7 @@ while True:
         print(display)
 
         # Check if more than 30 minutes have elapsed since the last CGM reading
-        elapsed_cgm_time = now - datetime.strptime(currentReading["reading"]["last_cgm_reading"], "%Y-%m-%dT%H:%M:%S.%f%z")
+        elapsed_cgm_time = now - last_cgm_reading
         if elapsed_cgm_time > timedelta(minutes=30):
             print("More than 30 minutes since last CGM reading, rebooting...")
             os.system("sudo reboot")  # Adjust this command based on your OS
