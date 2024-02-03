@@ -22,12 +22,13 @@ session = boto3.Session(
 s3 = session.resource("s3")
 bucket = s3.Bucket(s3bucket)
 readingsArray = []
+previous_last_cgm_reading = None  # Initialize the previous last_cgm_reading
 
 last_reboot_time = datetime.now(timezone.utc)  # Initialize the last reboot time
 
 while True:
     glucose_reading = dexcom.get_current_glucose_reading()
-    if glucose_reading is not None :
+    if glucose_reading is not None:
         display = f'{glucose_reading.mmol_l} {glucose_reading.trend_arrow}'
         now = datetime.now(timezone.utc)  # Make now offset-aware
 
@@ -39,22 +40,23 @@ while True:
 
         last_cgm_reading = glucose_reading.datetime.astimezone(timezone.utc)
 
-        currentReading = {
-            "reading": {
-                "mmol_l": glucose_reading.mmol_l,
-                "trend_arrow": glucose_reading.trend_arrow,
-                "trend_description": glucose_reading.trend_description,
-                "last_cgm_reading": last_cgm_reading.isoformat(),
-                "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
+        # Compare with the previous last_cgm_reading
+        if last_cgm_reading != previous_last_cgm_reading:
+            currentReading = {
+                "reading": {
+                    "mmol_l": glucose_reading.mmol_l,
+                    "trend_arrow": glucose_reading.trend_arrow,
+                    "trend_description": glucose_reading.trend_description,
+                    "last_cgm_reading": last_cgm_reading.isoformat(),
+                    "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
+                }
             }
-        }
-        if len(readingsArray) > 0 :
-            first = readingsArray[0]
-            if glucose_reading.datetime.isoformat() != first["last_cgm_reading"] :
-                readingsArray = [currentReading["reading"]] + readingsArray
-        elif len(readingsArray) == 0 :
-            readingsArray = [currentReading["reading"]]
-        if len(readingsArray) > 12 :
+            readingsArray = [currentReading["reading"]] + readingsArray
+
+            # Update the previous last_cgm_reading
+            previous_last_cgm_reading = last_cgm_reading
+
+        if len(readingsArray) > 12:
             readingsArray = readingsArray[:12]
 
         writeOutput = {
@@ -78,5 +80,5 @@ while True:
             os.system("sudo reboot")  # Adjust this command based on your OS
             last_reboot_time = now  # Update the last reboot time
 
-        bucket.upload_file('readings.json', 'readings.json', ExtraArgs={'ACL':'public-read'})
+        bucket.upload_file('readings.json', 'readings.json', ExtraArgs={'ACL': 'public-read'})
     time.sleep(60)
