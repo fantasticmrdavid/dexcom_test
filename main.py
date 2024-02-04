@@ -51,7 +51,10 @@ while True:
                     "last_push": now.strftime("%Y-%m-%d %H:%M:%S"),
                 }
             }
-            readingsArray = [currentReading["reading"]] + readingsArray
+            if len(readingsArray) == 0 :
+                readingsArray = [currentReading["reading"]]
+            else :
+                readingsArray = [currentReading["reading"]] + readingsArray
 
             # Update the previous last_cgm_reading
             previous_last_cgm_reading = last_cgm_reading
