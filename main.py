@@ -29,12 +29,13 @@ while True:
     response = requests.get(f"{nightscout_url}/api/v1/entries.json?count=1")
     if response.status_code == 200:
         glucose_data = response.json()[0]
-        # print(f"Response: {glucose_data}")
+        # Parse the datetime string correctly
+        glucose_datetime = datetime.strptime(glucose_data["dateString"], "%Y-%m-%dT%H:%M:%S.%fZ").astimezone(timezone.utc)
         glucose_reading = {
             "mmol_l": glucose_data["sgv"] / 18.0,  # Convert mg/dL to mmol/L
             "trend_arrow": glucose_data["direction"],
             "trend_description": glucose_data["direction"],
-            "datetime": datetime.fromisoformat(glucose_data["dateString"]).astimezone(timezone.utc)
+            "datetime": glucose_datetime
         }
         display = f'{glucose_reading["mmol_l"]} {glucose_reading["trend_arrow"]}'
         now = datetime.now(timezone.utc)  # Make now offset-aware
