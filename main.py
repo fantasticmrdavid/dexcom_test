@@ -74,13 +74,13 @@ while True:
         elapsed_cgm_time = now - last_cgm_reading
         if elapsed_cgm_time > timedelta(minutes=30):
             print("More than 30 minutes since last CGM reading, rebooting...")
-            os.system("sudo reboot")  # Adjust this command based on your OS
+            os.system("sudo reboot -f")  # Adjust this command based on your OS
 
         # Check if more than a week has passed since the last reboot
         elapsed_week_time = now - last_reboot_time
         if elapsed_week_time > timedelta(weeks=1):
             print("Weekly system reboot...")
-            os.system("sudo reboot")  # Adjust this command based on your OS
+            os.system("sudo reboot -f")  # Adjust this command based on your OS
             last_reboot_time = now  # Update the last reboot time
 
         bucket.upload_file('readings.json', 'readings.json', ExtraArgs={'ACL': 'public-read'})
